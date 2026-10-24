@@ -2,9 +2,12 @@ import yfinance as yf
 import pandas as pd
 from pathlib import Path
 from datetime import date
+import random
 
 downloadPath = Path( "cache/download.parquet" )
 infoPath = Path( "cache/info.parquet" )
+
+errorChance = 0
 
 # Things to not track with
 keepInfo = {
@@ -25,9 +28,9 @@ cacheDownload = pd.read_parquet( downloadPath ) if downloadPath.is_file() else p
 
 def info( ticker: str, date: date ) -> dict | None:
     # Check for cached
-    if cacheInfo.empty or "ticker" not in cacheInfo.column or ticker not in cacheInfo["ticker"].values:
+    if cacheInfo.empty or "ticker" not in cacheInfo.columns or ticker not in cacheInfo["ticker"].values:
         addCache( ticker )
-    elif cacheDownload.empty or "ticker" not in cacheDownload.column or ticker not in cacheDownload["ticker"].values:
+    elif cacheDownload.empty or "ticker" not in cacheDownload.columns or ticker not in cacheDownload["ticker"].values:
         addCache( ticker )
 
     output = cacheInfo[ cacheInfo["ticker"] == ticker ]
@@ -54,6 +57,12 @@ def info( ticker: str, date: date ) -> dict | None:
             "currentPrice": float(row["Close"]),
             "volume": int(row["Volume"]),
         } )
+
+    if errorChance >= random.randint(1,100):
+        output["error"] = "Test"
+        # TODO: Add errors (with tracking)
+    else:
+        output["error"] = "None"
 
     return output
 
