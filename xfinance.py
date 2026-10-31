@@ -7,7 +7,7 @@ import random
 downloadPath = Path( "cache/download.parquet" )
 infoPath = Path( "cache/info.parquet" )
 
-errorChance = 0
+ERROR_CHANCE = 0
 
 # Things to not track with
 keepInfo = {
@@ -58,13 +58,18 @@ def info( ticker: str, date: date ) -> dict | None:
             "volume": int(row["Volume"]),
         } )
 
-    if errorChance >= random.randint(1,100):
-        output["error"] = "Test"
-        # TODO: Add errors (with tracking)
-    else:
-        output["error"] = "None"
+    # TODO: Move all of this into addError?
+    errors = []
+
+    while ERROR_CHANCE >= random.randint(1,100):
+        addError( output, errors )
+
+    output["errors"] = ",".join( errors ) or "None"
 
     return output
+
+def addError( output: dict, errors: list ):
+    errors.append( "test error" )
 
 def addCache( ticker ):
     global cacheInfo, cacheDownload
