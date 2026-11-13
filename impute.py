@@ -1,13 +1,19 @@
 import pandas as pd
 from vars import START, LENGTH, SYMBOLS, COLUMNS
 from pathlib import Path
-from datetime import date, timedelta
+from datetime import timedelta
 
-def impute_locf():
-    return
+def impute_locf( row, currentDate, history, today ):
+    # Iterate back to last non-error value
+    for past in reversed( history[ row["symbol"] ] ):
+        if not past["detected"]:
+            row["currentPrice"] = past["currentPrice"]
+            break
+    return row
 
-def impute_other():
-    return
+def impute_other( row, currentDate, history, today ):
+    row["currentPrice"] = 1
+    return row
 
 IMPUTORS = {
     "locf": impute_locf,
@@ -24,64 +30,51 @@ def flush( rows: list, path: Path ):
     df.to_parquet( path, index=False )
 
 def main():
-
     # Gather all the parquet files
     folder = Path( "data/detect" )
 
-    files = folder.glob( "*.parquet" )
+    files = sorted( folder.glob( "*.parquet" ) )
 
-    dataframes = []
-
+    # TODO: Switch to loading each file, one at a time
     for file in files:
-        df = df.read_parquet( file )
-        dataframes.append( ( file.stem, df ) )
+        df = pd.read_parquet( file )
+        detectorName = file.stem
 
-    for detector, df in dataframes:
-        currentDate = START
+        dataByDate = { d: f for d, f in df.groupby( "date" ) }
         
         results = { name: [] for name in IMPUTORS }
         history = { symbol: [] for symbol in SYMBOLS }
 
-        rows = []
-
         for i in range( LENGTH ):
-            today = {}
+            currentDate = START + timedelta( days=i )
 
-            # Get current day record from xfinance for each stock
-            for symbol in SYMBOLS:
-                # Get record
-                baseline = info( symbol, currentDate )    # Returns dict
+            dataForDay = dataByDate.get( currentDate )
 
-                # Skip if nothing returned
-                if not baseline:
-                    continue
+            if dataForDay is None:
+                continue
 
-                # Add recieved date
-                baseline["date"] = currentDate
-                today[symbol] = baseline
+            today = { record["symbol"]: record for record in dataForDay.to_dict( "records" ) }
 
             # Loop through all stocks
-            for symbol, base in today.items():
+            for symbol, baseline in today.items():
                 # Loop through all detection techniques
-                for name, detector in IMPUTORS.items():
+                for imputorName, imputor in IMPUTORS.items():
+
                     row = dict( baseline )
 
-                    flags = detector( row, currentDate, history, today )
-                    row["flags"] = ",".join( flags ) or "None"
-                    row["detected"] = True
+                    if row["detected"]:
+                        row = imputor( row, currentDate, history, today )
 
-                    print( name, row )
-                    results[name].append( row )
+                    print( detectorName, imputorName, row )
+                    results[imputorName].append( row )
 
             # Update history only after detectors have run
             for symbol, baseline in today.items():
-                history[symbol].append( base )
+                history[symbol].append( baseline )
 
             # Save to parquet
-            for imputor, rows in results.items():
-                flush( rows, f"data/impute/{detector}-{imputor}.parquet" )
-
-            currentDate += timedelta( days=1 )
+            for imputorName, rows in results.items():
+                flush( rows, Path( "data/impute" ) / f"{detectorName}-{imputorName}.parquet" )
 
 if __name__ == "__main__":
     main()

@@ -7,7 +7,7 @@ import random
 downloadPath = Path( "cache/download.parquet" )
 infoPath = Path( "cache/info.parquet" )
 
-ERROR_CHANCE = 0
+ERROR_CHANCE = 10
 
 # Things to not track with
 keepInfo = {
@@ -47,16 +47,19 @@ def info( ticker: str, date: date ) -> dict | None:
         ( pd.to_datetime( cacheDownload["Date"] ).dt.date == date )
     ]
 
-    if not prices.empty:
-        row = prices.iloc[0]
+    if prices.empty:
+        return None
 
-        output.update( {
-            "open": float(row["Open"]),
-            "dayHigh": float(row["High"]),
-            "dayLow": float(row["Low"]),
-            "currentPrice": float(row["Close"]),
-            "volume": int(row["Volume"]),
-        } )
+    row = prices.iloc[0]
+
+    output.update( {
+        "open": float(row["Open"]),
+        "dayHigh": float(row["High"]),
+        "dayLow": float(row["Low"]),
+        "currentPrice": float(row["Close"]),
+        "originalPrice": float(row["Close"]),
+        "volume": int(row["Volume"]),
+    } )
 
     # TODO: Move all of this into addError?
     errors = []
@@ -69,7 +72,8 @@ def info( ticker: str, date: date ) -> dict | None:
     return output
 
 def addError( output: dict, errors: list ):
-    errors.append( "test error" )
+    errors.append( "zero value" )
+    output["currentPrice"] = 0
 
 def addCache( ticker ):
     global cacheInfo, cacheDownload

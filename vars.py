@@ -1,7 +1,7 @@
 from datetime import date
 
 START = date(2020,1,1)
-LENGTH = 10
+LENGTH = 100
 
 SYMBOLS = [
     "AAPL",
@@ -13,8 +13,14 @@ SYMBOLS = [
     "TSLA",
 ]
 
-COLUMNS = [ "symbol", "date", "errors", "flags", "shortName",
-            "longName", "quoteType", "currency", "exchange",
-            "country", "sector", "industry","open", "dayHigh",
-            "dayLow", "currentPrice", "volume"
+COLUMNS = [
+        # xfinance
+        "symbol", "date", "errors", "shortName", "longName",
+        "quoteType", "currency", "exchange", "country",
+        "sector", "industry","open", "dayHigh", "dayLow",
+        "currentPrice", "originalPrice", "volume",
+
+        # Detect
+        "flags", "detected",
+
 ]

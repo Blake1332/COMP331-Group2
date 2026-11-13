@@ -1,26 +1,8 @@
 import pandas as pd
+from vars import START, LENGTH, SYMBOLS, COLUMNS
 from pathlib import Path
 from datetime import date, timedelta
 from xfinance import info
-
-START = date(2020,1,1)
-LENGTH = 10            # Increase to 5 years (365 * 5)
-
-SYMBOLS = [
-    "AAPL",
-    "AMZN",
-    "GOOGL",
-    "COST",
-    "KO",
-    "NVDA",
-    "TSLA",
-]
-
-COLUMNS = [ "symbol", "date", "errors", "flags", "shortName",
-            "longName", "quoteType", "currency", "exchange",
-            "country", "sector", "industry","open", "dayHigh",
-            "dayLow", "currentPrice", "volume"
-]
 
 def detect_threshold( row, currentDate, history, today ) -> list:
     # Check if stock has had very large returns from previous
@@ -55,7 +37,7 @@ def flush( rows: list, path: Path ):
     df.to_parquet( path, index=False )
 
 def main():
-    currentDate = START
+    
 
     results = { name: [] for name in DETECTORS }
     history = { symbol: [] for symbol in SYMBOLS }
@@ -63,6 +45,8 @@ def main():
     rows = []
 
     for i in range( LENGTH ):
+        currentDate = START + timedelta( days=i )
+        
         today = {}
 
         # Get current day record from xfinance for each stock
@@ -79,27 +63,25 @@ def main():
             today[symbol] = baseline
 
         # Loop through all stocks
-        for symbol, base in today.items():
+        for symbol, baseline in today.items():
             # Loop through all detection techniques
             for name, detector in DETECTORS.items():
                 row = dict( baseline )
 
                 flags = detector( row, currentDate, history, today )
                 row["flags"] = ",".join( flags ) or "None"
-                row["detected"] = True
+                row["detected"] = bool ( flags )
 
                 print( name, row )
                 results[name].append( row )
 
         # Update history only after detectors have run
         for symbol, baseline in today.items():
-            history[symbol].append( base )
+            history[symbol].append( baseline )
 
         # Save to parquet
         for name, rows in results.items():
-            flush( rows, f"data/detect/{name}.parquet" )
-
-        currentDate += timedelta( days=1 )
+            flush( rows, Path( "data/detect" ) / f"{name}.parquet" )
 
 if __name__ == "__main__":
     main()
