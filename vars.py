@@ -21,6 +21,6 @@ COLUMNS = [
         "currentPrice", "originalPrice", "volume",
 
         # Detect
-        "flags", "detected",
+        "flags",
 
 ]

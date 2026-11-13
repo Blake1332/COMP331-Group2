@@ -20,12 +20,10 @@ if ($new) {
     }
 }
 
-# Run the files
-foreach ($script in "detect.py", "impute.py", "report.py") {
-    Write-Host "Running $script..." -ForegroundColor Cyan
-    python $script
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "$script failed" -ForegroundColor Red
-        exit $LASTEXITCODE
-    }
-}
+# Run the detectors/imputors
+Write-Host "Importing stream..." -ForegroundColor Cyan
+python stream.py
+
+# Display report
+Write-Host " ===== Report ===== " -ForegroundColor Cyan
+python report.py
