@@ -3,13 +3,17 @@ import pandas as pd
 from pathlib import Path
 from datetime import date
 import random
+from error import inject
 
+# Paths for data
 downloadPath = Path( "cache/download.parquet" )
 infoPath = Path( "cache/info.parquet" )
 
-ERROR_CHANCE = 10
+# Load cache, or create blank DataFrames
+cacheInfo = pd.read_parquet( infoPath ) if infoPath.is_file() else pd.DataFrame()
+cacheDownload = pd.read_parquet( downloadPath ) if downloadPath.is_file() else pd.DataFrame()
 
-# Things to not track with
+# Fields to keep
 keepInfo = {
     "symbol",
     "shortName",
@@ -21,10 +25,6 @@ keepInfo = {
     "sector",
     "industry",
 }
-
-# Load cache, or create blank DataFrames
-cacheInfo = pd.read_parquet( infoPath ) if infoPath.is_file() else pd.DataFrame()
-cacheDownload = pd.read_parquet( downloadPath ) if downloadPath.is_file() else pd.DataFrame()
 
 def info( ticker: str, date: date ) -> dict | None:
     # Check for cached
@@ -57,23 +57,18 @@ def info( ticker: str, date: date ) -> dict | None:
         "dayHigh": float(row["High"]),
         "dayLow": float(row["Low"]),
         "currentPrice": float(row["Close"]),
-        "originalPrice": float(row["Close"]),
         "volume": int(row["Volume"]),
+        "originalOpen": float(row["Open"]),
+        "originalHigh": float(row["High"]),
+        "originalLow": float(row["Low"]),
+        "originalPrice": float(row["Close"]),
+        "originalVolume": int(row["Volume"]),
     } )
 
-    # TODO: Move all of this into addError?
-    errors = []
-
-    while ERROR_CHANCE >= random.randint(1,100):
-        addError( output, errors )
-
-    output["errors"] = ",".join( errors ) or "None"
+    # Inject errors
+    output["errors"] = inject( output )
 
     return output
-
-def addError( output: dict, errors: list ):
-    errors.append( "zero value" )
-    output["currentPrice"] = 0
 
 def addCache( ticker ):
     global cacheInfo, cacheDownload
