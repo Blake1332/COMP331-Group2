@@ -1,12 +1,6 @@
 import random
 
-FIELDS = [
-    "open",
-    "dayHigh",
-    "dayLow",
-    "currentPrice",
-    "volume",
-]
+from vars import FIELDS
 
 MAX_ERRORS = 3
 
@@ -106,7 +100,15 @@ def inject( row ):
     
     # Standard errors
     if random.randint( 1, 100 ) <= ERROR_CHANCE:
-        possible = [ field for field in FIELDS if field not in affected ]
+        possible = [
+            field for field in FIELDS
+            if field not in affected
+            and isinstance( row.get( field ), ( int, float ) )
+            and not isinstance( row[field], bool )
+            ]
+
+        if not possible:
+            return []
 
         count = random.randint( 1, min( MAX_ERRORS, len( possible ) ) )
 

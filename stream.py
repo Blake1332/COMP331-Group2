@@ -1,5 +1,5 @@
 import pandas as pd
-from vars import START, LENGTH, SYMBOLS, COLUMNS
+from vars import START, LENGTH, SYMBOLS, COLUMNS, FIELDS
 from pathlib import Path
 from datetime import timedelta
 from xfinance import info
@@ -10,7 +10,11 @@ def flush( rows: list, path: Path ):
     if not rows:
         return
 
-    df = pd.DataFrame( rows ).reindex( columns=COLUMNS + list( IMPUTORS ) )
+    df = pd.DataFrame( rows ).reindex(
+        columns=COLUMNS +
+        list( IMPUTORS ) + 
+        [ f"{name}_{field}" for name in IMPUTORS for field in FIELDS ]
+    )
 
     path.parent.mkdir( parents=True, exist_ok=True )
     df.to_parquet( path, index=False )
@@ -43,20 +47,29 @@ def main():
         for symbol, row in today.items():
 
             # Loop through all detection techniques
-            flags = []
+            flags = {}
             for name, detector in DETECTORS.items():
-                if detector( row, currentDate, history, today ):
-                    flags.append( name )
+                detected = detector( row, currentDate, history, today )
 
-            row["flags"] = ",".join( flags ) or None
+                if detected:
+                    flags[name] = detected
+
+            # Detectors seperated by ;
+            # Fields seperated by ,
+            row["flags"] = ";".join(
+                f"{name}:{",".join( fields )}" for name, fields in flags.items()
+            ) or None
 
             # Loop through all imputation techniques
             for name, imputor in IMPUTORS.items():
                 if flags:
                     imputed = imputor( row, currentDate, history, today )
-                    row[name] = imputed
+
+                    for field, value in imputed.items():
+                        row[f"{name}_{field}"] = value
                 else:
-                    row[name] = row["currentPrice"]
+                    for field in FIELDS:
+                        row[f"{name}_{field}"] = row[field]
 
             rows.append( row )
 

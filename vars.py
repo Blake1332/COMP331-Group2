@@ -23,4 +23,15 @@ COLUMNS = [
         # Detect
         "flags",
 
+        # Original
+        "og_open", "og_dayHigh", "og_dayLow", "og_currentPrice",
+        "og_originalPrice", "og_volume",
+]
+
+FIELDS = [
+    "open",
+    "dayHigh",
+    "dayLow",
+    "currentPrice",
+    "volume",
 ]

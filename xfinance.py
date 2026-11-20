@@ -58,11 +58,11 @@ def info( ticker: str, date: date ) -> dict | None:
         "dayLow": float(row["Low"]),
         "currentPrice": float(row["Close"]),
         "volume": int(row["Volume"]),
-        "originalOpen": float(row["Open"]),
-        "originalHigh": float(row["High"]),
-        "originalLow": float(row["Low"]),
-        "originalPrice": float(row["Close"]),
-        "originalVolume": int(row["Volume"]),
+        "og_open": float(row["Open"]),
+        "og_dayHigh": float(row["High"]),
+        "og_dayLow": float(row["Low"]),
+        "og_currentPrice": float(row["Close"]),
+        "og_volume": int(row["Volume"]),
     } )
 
     # Inject errors
