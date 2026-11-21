@@ -116,7 +116,7 @@ def inject( row ):
             ]
 
         if not possible:
-            return []
+            return None
 
         count = seededRandom.randint( 1, min( MAX_ERRORS, len( possible ) ) )
 
