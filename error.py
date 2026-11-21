@@ -14,6 +14,14 @@ BURST_MAX = 10
 
 ACTIVE_BURSTS = {}
 
+seededRandom = random.Random()
+
+def reset( seed: int | None = None ):
+    ACTIVE_BURSTS.clear()
+
+    if seed is not None:
+        seededRandom.seed( seed )
+
 def error_zero( row, fields ):
     for field in fields:
         row[field] = 0
@@ -24,14 +32,14 @@ def error_missing( row, fields ):
 
 def error_outlier( row, fields ):
     for field in fields:
-        row[field] = row[field] * random.uniform( 10, 50 )
+        row[field] = row[field] * seededRandom.uniform( 10, 50 )
 
 def error_noise( row, fields ):
     for field in fields:
-        row[field] = row[field] * random.uniform( 0.5, 1.2 )
+        row[field] = row[field] * seededRandom.uniform( 0.5, 1.2 )
 
 def error_scaling( row, fields ):
-    factor = random.choice( [0.01, 100] )
+    factor = seededRandom.choice( [0.01, 100] )
 
     for field in fields:
         row[field] = row[field] * factor
@@ -75,16 +83,16 @@ def inject( row ):
             del ACTIVE_BURSTS[symbol]
 
     # New burst
-    elif random.randint( 1, 100 ) <= BURST_CHANCE:
-        scope = random.choice( ["field", "record"] )
-        error = random.choice( list( ERRORS ) )
+    elif seededRandom.randint( 1, 100 ) <= BURST_CHANCE:
+        scope = seededRandom.choice( ["field", "record"] )
+        error = seededRandom.choice( list( ERRORS ) )
 
         fields = (
-            [ random.choice( FIELDS ) ]
+            [ seededRandom.choice( FIELDS ) ]
             if scope == "field" else FIELDS
         )
 
-        length = random.randint( BURST_MIN, BURST_MAX )
+        length = seededRandom.randint( BURST_MIN, BURST_MAX )
 
         apply_error( row, error, fields )
         affected.update( fields )
@@ -99,7 +107,7 @@ def inject( row ):
             }
     
     # Standard errors
-    if random.randint( 1, 100 ) <= ERROR_CHANCE:
+    if seededRandom.randint( 1, 100 ) <= ERROR_CHANCE:
         possible = [
             field for field in FIELDS
             if field not in affected
@@ -110,17 +118,17 @@ def inject( row ):
         if not possible:
             return []
 
-        count = random.randint( 1, min( MAX_ERRORS, len( possible ) ) )
+        count = seededRandom.randint( 1, min( MAX_ERRORS, len( possible ) ) )
 
         for _ in range( count ):
             if not possible:
                 break
 
-            scope = random.choice( ["field", "record"] )
-            error = random.choice( list( ERRORS ) )
+            scope = seededRandom.choice( ["field", "record"] )
+            error = seededRandom.choice( list( ERRORS ) )
 
             fields = (
-                [ random.choice( possible ) ]
+                [ seededRandom.choice( possible ) ]
                 if scope == "field" else possible.copy()
             )
 

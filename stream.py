@@ -1,3 +1,4 @@
+import argparse
 import pandas as pd
 from vars import START, LENGTH, SYMBOLS, COLUMNS, FIELDS
 from pathlib import Path
@@ -5,6 +6,7 @@ from datetime import timedelta
 from xfinance import info
 from detect import DETECTORS
 from impute import IMPUTORS
+from error import reset
 
 def flush( rows: list, path: Path ):
     if not rows:
@@ -19,8 +21,11 @@ def flush( rows: list, path: Path ):
     path.parent.mkdir( parents=True, exist_ok=True )
     df.to_parquet( path, index=False )
 
-def main():
-    
+def main( seed: int | None = None ):
+    if seed:
+        reset( seed )
+    else:
+        reset()
     history = { symbol: [] for symbol in SYMBOLS }
 
     rows = []
@@ -81,4 +86,11 @@ def main():
     flush( rows, Path( "data/imported.parquet" ) )
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Sets a seed for reproducible errors across runs.",
+    )
+    main(seed=parser.parse_args().seed)
