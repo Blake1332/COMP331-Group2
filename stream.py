@@ -62,7 +62,7 @@ def main( seed: int | None = None ):
             # Detectors seperated by ;
             # Fields seperated by ,
             row["flags"] = ";".join(
-                f"{name}:{",".join( fields )}" for name, fields in flags.items()
+                f"{name}:{','.join( fields )}" for name, fields in flags.items()
             ) or None
 
             # Loop through all imputation techniques

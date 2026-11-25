@@ -1,3 +1,4 @@
+import numpy as np
 from vars import FIELDS
 
 """
@@ -45,8 +46,28 @@ def detect_threshold( row, currentDate, history, today ) -> list[str]:
     return flagged
 
 
+def detect_outlier( row, currentDate, history, today ) -> list[str]:
+    flagged = []
+
+    past = history.get( row["symbol"], [] )[-20:]
+
+    for field in FIELDS:
+        values = [ float(r[field]) for r in past if r.get(field) is not None ]
+
+        if len(values) < 5:
+            continue
+
+        q1, q3 = np.percentile( values, [25, 75] )
+        iqr = q3 - q1
+
+        val = row.get(field)
+   
+        if val is not None and not (q1 - 3 * iqr <= val <= q3 + 3 * iqr):
+            flagged.append(field)
+
+    return flagged
+
 def detect_other( row, currentDate, history, today ) -> list[str]:
-    # Check fields so to see if...
     flagged = []
 
     return flagged
@@ -55,11 +76,12 @@ def detect_multi( row, currentDate, history, today ) -> list[str]:
     flagged = set()
 
     flagged.update( detect_threshold( row, currentDate, history, today ) )
-    flagged.update( detect_other( row, currentDate, history, today ) )
+    flagged.update( detect_outlier( row, currentDate, history, today ) )
 
     return flagged
 
 DETECTORS = {
     "threshold": detect_threshold,
+    "outlier": detect_outlier,
     "other": detect_other,
 }
