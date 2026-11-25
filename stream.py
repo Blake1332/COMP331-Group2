@@ -30,7 +30,12 @@ def main( seed: int | None = None ):
 
     rows = []
 
-    for i in range( LENGTH ):
+    if LENGTH < 1 or LENGTH > ( 365 * 5):
+        length = 365 * 5
+    else:
+        length = LENGTH
+
+    for i in range( length ):
         currentDate = START + timedelta( days=i )
 
         today = {}
