@@ -51,6 +51,14 @@ def detect_other( row, currentDate, history, today ) -> list[str]:
 
     return flagged
 
+def detect_multi( row, currentDate, history, today ) -> list[str]:
+    flagged = set()
+
+    flagged.update( detect_threshold( row, currentDate, history, today ) )
+    flagged.update( detect_other( row, currentDate, history, today ) )
+
+    return flagged
+
 DETECTORS = {
     "threshold": detect_threshold,
     "other": detect_other,
