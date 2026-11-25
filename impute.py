@@ -95,8 +95,75 @@ def impute_mean(row, currentDate, history, today) -> dict:
 
     return result
 
+
+def impute_median( row, currentDate, history, today ) -> dict:
+    affected = set()
+
+    for fields in parse_flags( row["flags"] ).values():
+        affected.update( fields )
+
+    result = {}
+    previous = history[ row["symbol"] ][-10:]
+
+    # last 10 previous records.
+    for field in affected:
+        values = []
+
+        # if missing dont use
+        for past in previous:
+            value = past[field]
+
+            if pd.notna( value ):
+                values.append( float( value ) )
+
+        if len( values ) > 0:
+            result[field] = float( pd.Series( values ).median() )
+        else:
+            result[field] = None
+
+    return result
+
+
+def impute_interpolate( row, currentDate, history, today ) -> dict:
+    affected = set()
+
+    for fields in parse_flags( row["flags"] ).values():
+        affected.update( fields )
+
+    result = {}
+
+    # estimate
+    for field in affected:
+        previous = None
+        next_value = None
+
+        # last non-error value
+        for past in reversed( history[ row["symbol"] ] ):
+            if pd.notna( past[field] ):
+                previous = float( past[field] )
+                break
+
+        #today's value if one is available. 
+        if field in today and pd.notna( today[field] ):
+            next_value = float( today[field] )
+
+        # try our best to average values if we can
+        if previous is not None and next_value is not None:
+            result[field] = ( previous + next_value ) / 2
+        elif previous is not None:
+            result[field] = previous
+        elif next_value is not None:
+            result[field] = next_value
+        else:
+            result[field] = None
+
+    return result
+
+
 IMPUTORS = {
     "locf": impute_locf,
     "mean": impute_mean,
+    "median": impute_median,
+    "interpolate": impute_interpolate,
     "other": impute_other,
 }
