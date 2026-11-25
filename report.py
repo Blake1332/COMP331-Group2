@@ -41,8 +41,8 @@ def summarize_imputor( name: str, df: pd.DataFrame, flagged: pd.Series ) -> dict
 
         valid = original.notna() & imputed.notna()
 
-        actual = original[valid]
-        predicted = imputed[valid]
+        actual.extend( original[valid].tolist() )
+        predicted.extend( imputed[valid].tolist() )
 
     actual = pd.Series( actual )
     predicted = pd.Series( predicted )
@@ -59,9 +59,9 @@ def summarize_imputor( name: str, df: pd.DataFrame, flagged: pd.Series ) -> dict
         "coverage": divide( len( actual ), attempted ),
         "MAE": errors.mean(),
         "RMSE": np.sqrt( ( errors ** 2 ).mean() ),
-        "mean error %": round( pct.mean(), 2 ),
-        "median error %": round( pct.median(), 2 ),
-        "max error %": round( pct.max(), 2 ),
+        # "mean error %": round( pct.mean(), 2 ),
+        # "median error %": round( pct.median(), 2 ),
+        # "max error %": round( pct.max(), 2 ),
     }
 
 def main():
@@ -74,7 +74,7 @@ def main():
     any_flagged = df["flags"].fillna("").str.strip().ne("")
 
     # Detectors
-    detectors = [ summarize_detector( "ANY", df["flags"].notna(), error ) ]
+    detectors = [ summarize_detector( "ANY", any_flagged, error ) ]
 
     for name in DETECTORS:
         flagged = names.apply( lambda f: name in f )
