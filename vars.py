@@ -1,7 +1,7 @@
 from datetime import date
 
 START = date(2020,1,1)
-LENGTH = 100
+LENGTH = 365 * 5
 
 SYMBOLS = [
     "AAPL",
