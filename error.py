@@ -30,13 +30,19 @@ def error_missing( row, fields ):
     for field in fields:
         row[field] = None
 
-def error_outlier( row, fields ):
+def error_outlier( row, fields, factor=None ):
+    if factor is None:
+        factor = outlier_factor()
+    
     for field in fields:
-        row[field] = row[field] * seededRandom.uniform( 10, 50 )
+        row[field] = row[field] * factor
 
-def error_noise( row, fields ):
+def error_noise( row, fields, factor=None ):
+    if factor is None:
+        factor = noise_factor()
+
     for field in fields:
-        row[field] = row[field] * seededRandom.uniform( 0.5, 1.2 )
+        row[field] = row[field] * factor
 
 def error_scaling( row, fields ):
     factor = seededRandom.choice( [0.01, 100] )
@@ -52,8 +58,12 @@ ERRORS = {
     "scaling": error_scaling,
 }
 
-def apply_error( row, error, fields ):
-    ERRORS[error]( row, fields )
+def apply_error( row, error, fields, factor=None ):
+    # Errors with factor
+    if error in [ "outlier", "noise" ]:
+        ERRORS[error]( row, fields, factor )
+    else:
+        ERRORS[error]( row, fields )
 
     # Ensure volume is integer
     if "volume" in fields and row["volume"] is not None:
@@ -94,7 +104,14 @@ def inject( row ):
 
         length = seededRandom.randint( BURST_MIN, BURST_MAX )
 
-        apply_error( row, error, fields )
+        factor = None
+        if error == "outlier":
+            factor = outlier_factor()
+
+        if error == "noise":
+            factor = noise_factor()
+
+        apply_error( row, error, fields, factor )
         affected.update( fields )
 
         errors.append( f"burst:{error}:{','.join( fields )}")
@@ -147,3 +164,14 @@ def inject( row ):
     # No errors
     return ",".join( errors ) if errors else None
 
+def noise_factor():
+    return seededRandom.choice( [
+        seededRandom.uniform( 1.05, 1.2 ),
+        seededRandom.uniform( 0.8, 0.95 )
+    ] )
+
+def outlier_factor():
+    return seededRandom.choice( [
+        seededRandom.uniform( 10, 50 ),
+        seededRandom.uniform( 0.02, 0.1 )
+    ] )
