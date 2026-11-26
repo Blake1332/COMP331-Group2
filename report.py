@@ -59,9 +59,9 @@ def summarize_imputor( name: str, df: pd.DataFrame, flagged: pd.Series ) -> dict
         "coverage": divide( len( actual ), attempted ),
         "MAE": errors.mean(),
         "RMSE": np.sqrt( ( errors ** 2 ).mean() ),
-        # "mean error %": round( pct.mean(), 2 ),
-        # "median error %": round( pct.median(), 2 ),
-        # "max error %": round( pct.max(), 2 ),
+        "mean error %": round( pct.mean(), 2 ),
+        "median error %": round( pct.median(), 2 ),
+        "max error %": round( pct.max(), 2 ),
     }
 
 def main():

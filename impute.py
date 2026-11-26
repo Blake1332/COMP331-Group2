@@ -35,6 +35,15 @@ Data Info:
 
 """
 
+def was_flagged(past, field):
+    flags = parse_flags(past.get("flags"))
+
+    for names in flags.values():
+        if field in names:
+            return True
+
+    return False
+
 def impute_locf( row, currentDate, history, today ) -> dict:
     affected = set()
 
@@ -46,7 +55,7 @@ def impute_locf( row, currentDate, history, today ) -> dict:
     # Iterate back to last non-error value
     for field in affected:
         for past in reversed( history[ row["symbol"] ] ):
-            if past[field] is not None:
+            if pd.notna( past[field] ) and not was_flagged( past, field ):
                 result[field] = float( past[field] )
                 break
         else:
@@ -82,10 +91,8 @@ def impute_mean(row, currentDate, history, today) -> dict:
         for past in previous:
             value = past[field]
 
-            if pd.notna(value):
-                values.append(float(value))
-            else:
-                continue
+            if pd.notna(value) and not was_flagged( past, field ):
+                values.append( float( value ) )
 
         # Use the average, if no previous values exist use none
         if len(values) > 0:
@@ -113,7 +120,7 @@ def impute_median( row, currentDate, history, today ) -> dict:
         for past in previous:
             value = past[field]
 
-            if pd.notna( value ):
+            if pd.notna( value ) and not was_flagged( past, field ):
                 values.append( float( value ) )
 
         if len( values ) > 0:
@@ -139,7 +146,7 @@ def impute_interpolate( row, currentDate, history, today ) -> dict:
 
         # last non-error value
         for past in reversed( history[ row["symbol"] ] ):
-            if pd.notna( past[field] ):
+            if pd.notna( past[field] ) and not was_flagged( past, field ):
                 previous = float( past[field] )
                 break
 
