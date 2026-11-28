@@ -36,13 +36,13 @@ Data Info:
 """
 
 
-def detect_threshold( row, currentDate, history, today ) -> list[str]:
+def detect_zero( row, currentDate, history, today ) -> list[str]:
     # Check fields so to see if they are within threshold
     flagged = []
 
     for field in FIELDS:
         if row[field] == 0:
-            flagged.append(field)
+            flagged.append( field )
 
     return flagged
 
@@ -83,11 +83,10 @@ def detect_missing( row, currentDate, history, today ) -> list[str]:
 def detect_bar( row, currentDate, history, today ) -> list[str]:
     # Flag prices that are outside the expected range.
     flagged = []
-    names = [ "open", "dayHigh", "dayLow", "currentPrice" ]
     prices = []
 
     # Collect all available prices.
-    for field in names:
+    for field in FIELDS:
         value = row.get( field )
 
         if value is None or value != value:
@@ -125,7 +124,7 @@ def detect_peer( row, currentDate, history, today ) -> list[str]:
     # Flag stocks that move 20% away from other stocks. this can be usefull as the stock market tends to be correlated or move together.
     flagged = []
 
-    for field in [ "open", "dayHigh", "dayLow", "currentPrice" ]:
+    for field in FIELDS:
         base = None
 
         # last non-error price for this stock.
@@ -227,10 +226,7 @@ def detect_peer( row, currentDate, history, today ) -> list[str]:
             flagged.append( field )
 
     return flagged
-def detect_other( row, currentDate, history, today ) -> list[str]:
-    flagged = []
 
-    return flagged
 
 def detect_multi( row, currentDate, history, today ) -> list[str]:
     flagged = set()
@@ -241,11 +237,10 @@ def detect_multi( row, currentDate, history, today ) -> list[str]:
     return flagged
 
 DETECTORS = {
-    "threshold": detect_threshold,
+    "zero": detect_zero,
     "missing": detect_missing,
     "bar": detect_bar,
     "outlier": detect_outlier,
     "peer": detect_peer,
-    "other": detect_other,
     "multi": detect_multi,
 }
