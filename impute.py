@@ -44,6 +44,7 @@ def was_flagged(past, field):
 
     return False
 
+
 def impute_locf( row, currentDate, history, today ) -> dict:
     affected = set()
 
@@ -63,13 +64,6 @@ def impute_locf( row, currentDate, history, today ) -> dict:
                 
     return result
 
-def impute_other( row, currentDate, history, today ) -> dict:
-    affected = set()
-
-    for fields in parse_flags( row["flags"] ).values():
-        affected.update( fields )
-
-    return {field: 50.0 for field in affected}
 
 def impute_mean(row, currentDate, history, today) -> dict:
     # Find all fields that need to be replaced.
@@ -172,5 +166,4 @@ IMPUTORS = {
     "mean": impute_mean,
     "median": impute_median,
     "interpolate": impute_interpolate,
-    "other": impute_other,
 }
