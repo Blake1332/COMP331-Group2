@@ -33,5 +33,4 @@ FIELDS = [
     "dayHigh",
     "dayLow",
     "currentPrice",
-    "volume",
 ]
